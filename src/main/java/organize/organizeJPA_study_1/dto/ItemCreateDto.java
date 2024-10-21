@@ -3,7 +3,6 @@ package organize.organizeJPA_study_1.dto;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.persistence.Column;
-import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -34,7 +33,6 @@ public class ItemCreateDto {
     private int price;
     @Min(value = 0, message = "재고 수량은 0개 부터 가능합니다.")
     private int stockQuantity;
-
     @Column(nullable = false)
     private List<CategoryType> categoryTypes;
 

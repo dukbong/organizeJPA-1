@@ -17,6 +17,7 @@ public class Category extends BaseInfo {
     private Long id;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, unique = true)
     private CategoryType categoryType;
 
     @Builder

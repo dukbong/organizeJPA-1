@@ -22,4 +22,11 @@ public class Album extends Item {
         this.etc = etc;
     }
 
+    public void updateArtist(String artist) {
+        this.artist = artist;
+    }
+
+    public void updateEtc(String etc) {
+        this.etc = etc;
+    }
 }

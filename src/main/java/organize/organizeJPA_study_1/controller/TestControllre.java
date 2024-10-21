@@ -1,10 +1,7 @@
 package organize.organizeJPA_study_1.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import organize.organizeJPA_study_1.domain.Category;
 import organize.organizeJPA_study_1.dto.ItemCreateDto;
 import organize.organizeJPA_study_1.repository.CategoryRepository;
@@ -24,5 +21,15 @@ public class TestControllre {
     @PostMapping("/c")
     public void b(@RequestBody Category dto) {
         categoryRepository.save(dto);
+    }
+
+    @PostMapping("/u/{itemId}")
+    public void u(@PathVariable("itemId") Long itemId, @RequestBody ItemCreateDto dto) {
+        itemService.updateItem(itemId, dto);
+    }
+
+    @GetMapping("/off/{itemId}")
+    public void off(@PathVariable("itemId") Long itemId) {
+        itemService.offSaleItem(itemId);
     }
 }

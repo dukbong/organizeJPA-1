@@ -11,6 +11,7 @@ import organize.organizeJPA_study_1.domain.enums.CategoryType;
 import organize.organizeJPA_study_1.domain.enums.ItemStatus;
 import organize.organizeJPA_study_1.domain.itemtype.Album;
 import organize.organizeJPA_study_1.domain.itemtype.Book;
+import organize.organizeJPA_study_1.dto.AlbumCreateDto;
 import organize.organizeJPA_study_1.dto.BookCreateDto;
 import organize.organizeJPA_study_1.dto.ItemCreateDto;
 import organize.organizeJPA_study_1.mapper.Mapper;
@@ -19,6 +20,7 @@ import organize.organizeJPA_study_1.repository.CategoryRepository;
 import organize.organizeJPA_study_1.repository.ItemRepository;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -120,5 +122,56 @@ class ItemServiceTest {
         assertThat(hasBook).isTrue();
         assertThat(hasMovie).isTrue();
 
+    }
+
+    @Test
+    @DisplayName("아이템 수정 성공")
+    void updateTest_success() {
+        // given
+        Category category1 = Category.builder().categoryType(CategoryType.BOOK).build();
+        Category category2 = Category.builder().categoryType(CategoryType.ALBUM).build();
+        Category category3 = Category.builder().categoryType(CategoryType.MOVIE).build();
+        categoryRepository.save(category1);
+        categoryRepository.save(category2);
+        categoryRepository.save(category3);
+
+        BookCreateDto bookDto = new BookCreateDto(
+                "JPA 책",
+                15000,
+                5,
+                Arrays.asList(CategoryType.BOOK, CategoryType.MOVIE),
+                "김영한",
+                "123-123"
+        );
+        Long itemId = itemService.saveItem(bookDto);
+        AlbumCreateDto albumDto = new AlbumCreateDto(
+                "분홍신",
+                15000,
+                5,
+                Arrays.asList(CategoryType.ALBUM, CategoryType.MOVIE),
+                "아이유",
+                "아이유 노래"
+        );
+        // when
+        itemService.updateItem(itemId, albumDto);
+
+        // then
+        List<Item> items = itemRepository.findAll();
+        assertThat(items.size()).isEqualTo(1);
+        Album album = (Album) items.get(0);
+        boolean hasAlbum = album.getCategoryItems().stream()
+                .anyMatch(categoryItem -> categoryItem.getCategory().getCategoryType() == CategoryType.ALBUM);
+        boolean hasMovie = album.getCategoryItems().stream()
+                .anyMatch(categoryItem -> categoryItem.getCategory().getCategoryType() == CategoryType.MOVIE);
+
+        assertThat(album.getName()).isEqualTo(albumDto.getName());
+        assertThat(album.getPrice()).isEqualTo(albumDto.getPrice());
+        assertThat(album.getStockQuantity()).isEqualTo(albumDto.getStockQuantity());
+        assertThat(album.getArtist()).isEqualTo(albumDto.getArtist());
+        assertThat(album.getEtc()).isEqualTo(albumDto.getEtc());
+        assertThat(album.getItemStatus()).isEqualTo(ItemStatus.ON_SALE);
+        assertThat(album.getCategoryItems().size()).isEqualTo(2);
+        assertThat(hasAlbum).isTrue();
+        assertThat(hasMovie).isTrue();
     }
 }
