@@ -1,5 +1,6 @@
 package organize.organizeJPA_study_1.domain;
 
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

@@ -7,13 +7,11 @@ import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 import organize.organizeJPA_study_1.domain.base.BaseInfo;
 import organize.organizeJPA_study_1.domain.enums.ItemStatus;
+import organize.organizeJPA_study_1.domain.enums.UseYn;
 import organize.organizeJPA_study_1.domain.itemtype.Album;
 import organize.organizeJPA_study_1.domain.itemtype.Book;
 import organize.organizeJPA_study_1.domain.itemtype.Movie;
-import organize.organizeJPA_study_1.dto.AlbumCreateDto;
-import organize.organizeJPA_study_1.dto.BookCreateDto;
-import organize.organizeJPA_study_1.dto.ItemCreateDto;
-import organize.organizeJPA_study_1.dto.MovieCreateDto;
+import organize.organizeJPA_study_1.dto.*;
 import organize.organizeJPA_study_1.exception.NotEnoughStockException;
 
 import java.util.ArrayList;
@@ -35,6 +33,10 @@ public class Item extends BaseInfo {
 
     private int stockQuantity;
 
+    @Column(nullable = false, length = 1)
+    @Enumerated(EnumType.STRING)
+    private UseYn useYn;
+
     @Enumerated(EnumType.STRING)
     private ItemStatus itemStatus;
 
@@ -46,9 +48,51 @@ public class Item extends BaseInfo {
         this.price = price;
         this.stockQuantity = stockQuantity;
         this.itemStatus = ItemStatus.ON_SALE;
+        this.useYn = UseYn.Y;
     }
 
-    //==비즈니스 로직==//
+    public static List<ItemResponse> entityToResponseDto(List<Item> items) {
+        List<ItemResponse> responses = new ArrayList<>();
+        for (Item item : items) {
+            ItemResponse response = null;
+            if (item instanceof Book book) {
+                response = BookResponse.builder().name(book.getName())
+                        .price(book.getPrice())
+                        .stockQuantity(book.getStockQuantity())
+                        .categorys(book.getCategoryItems().stream().map(row -> row.getCategory().getCategoryType().getType()).toList())
+                        .itemStatus(book.getItemStatus())
+                        .author(book.getAuthor())
+                        .isbn(book.getIsbn())
+                        .build();
+            }
+            if (item instanceof Movie movie) {
+                response = MovieResponse.builder().name(movie.getName())
+                        .price(movie.getPrice())
+                        .stockQuantity(movie.getStockQuantity())
+                        .categorys(movie.getCategoryItems().stream().map(row -> row.getCategory().getCategoryType().getType()).toList())
+                        .itemStatus(movie.getItemStatus())
+                        .director(movie.getDirector())
+                        .actor(movie.getActor())
+                        .build();
+            }
+            if (item instanceof Album album) {
+                response = AlbumResponse.builder().name(album.getName())
+                        .price(album.getPrice())
+                        .stockQuantity(album.getStockQuantity())
+                        .categorys(album.getCategoryItems().stream().map(row -> row.getCategory().getCategoryType().getType()).toList())
+                        .itemStatus(album.getItemStatus())
+                        .artist(album.getArtist())
+                        .etc(album.getEtc())
+                        .build();
+            }
+
+            if (response != null) {
+                responses.add(response);
+            }
+        }
+        return responses;
+    }
+
     public void removeStock(int quantity) {
         int restStock = this.stockQuantity - quantity;
         if (restStock < 0) {
@@ -61,8 +105,8 @@ public class Item extends BaseInfo {
         this.stockQuantity += quantity;
     }
 
-    public void offSale() {
-        this.itemStatus = ItemStatus.OFF_SALE;
+    public void changeSale() {
+        this.itemStatus = this.itemStatus.toggle();
     }
 
     public void addCategoryItem(CategoryItem ci) {
@@ -87,35 +131,63 @@ public class Item extends BaseInfo {
             this.stockQuantity = itemCreateDto.getStockQuantity();
         }
 
+        updateItemDetails(itemCreateDto);
+    }
+
+    private void updateItemDetails(ItemCreateDto itemCreateDto) {
         if (itemCreateDto instanceof BookCreateDto dto) {
-            Book book = (Book) this;
-            if (dto.getAuthor() != null && !dto.getAuthor().equals(book.getAuthor())) {
-                book.updateAuthor(dto.getAuthor());
-            }
-            if (dto.getIsbn() != null && !dto.getIsbn().equals(book.getIsbn())) {
-                book.updateIsbn(dto.getIsbn());
-            }
-        }
-
-        if (itemCreateDto instanceof AlbumCreateDto dto) {
-            Album album = (Album) this;
-            if (dto.getArtist() != null && !dto.getArtist().equals(album.getArtist())) {
-                album.updateArtist(dto.getArtist());
-            }
-            if (dto.getEtc() != null && !dto.getEtc().equals(album.getEtc())) {
-                album.updateEtc(dto.getEtc());
-            }
-        }
-
-        if (itemCreateDto instanceof MovieCreateDto dto) {
-            Movie movie = (Movie) this;
-            if (dto.getDirector() != null && !dto.getDirector().equals(movie.getDirector())) {
-                movie.updateDirecotr(dto.getDirector());
-            }
-            if (dto.getActor() != null && !dto.getActor().equals(movie.getActor())) {
-                movie.updateActor(dto.getActor());
-            }
+            updateBookDetails(dto);
+        } else if (itemCreateDto instanceof AlbumCreateDto dto) {
+            updateAlbumDetails(dto);
+        } else if (itemCreateDto instanceof MovieCreateDto dto) {
+            updateMovieDetails(dto);
         }
     }
 
+    private void updateBookDetails(BookCreateDto dto) {
+        Book book = (Book) this;
+        if (dto.getAuthor() != null && !dto.getAuthor().equals(book.getAuthor())) {
+            book.updateAuthor(dto.getAuthor());
+        }
+        if (dto.getIsbn() != null && !dto.getIsbn().equals(book.getIsbn())) {
+            book.updateIsbn(dto.getIsbn());
+        }
+    }
+
+    private void updateAlbumDetails(AlbumCreateDto dto) {
+        Album album = (Album) this;
+        if (dto.getArtist() != null && !dto.getArtist().equals(album.getArtist())) {
+            album.updateArtist(dto.getArtist());
+        }
+        if (dto.getEtc() != null && !dto.getEtc().equals(album.getEtc())) {
+            album.updateEtc(dto.getEtc());
+        }
+    }
+
+    private void updateMovieDetails(MovieCreateDto dto) {
+        Movie movie = (Movie) this;
+        if (dto.getDirector() != null && !dto.getDirector().equals(movie.getDirector())) {
+            movie.updateDirector(dto.getDirector());
+        }
+        if (dto.getActor() != null && !dto.getActor().equals(movie.getActor())) {
+            movie.updateActor(dto.getActor());
+        }
+    }
+
+    public void notUse() {
+        this.useYn = UseYn.N;
+    }
+
+    public boolean isValidUpdate(Class<? extends ItemCreateDto> dtoClass) {
+        if (this instanceof Book && dtoClass != BookCreateDto.class) {
+            return false;
+        }
+        if (this instanceof Movie && dtoClass != MovieCreateDto.class) {
+            return false;
+        }
+        if (this instanceof Album && dtoClass != AlbumCreateDto.class) {
+            return false;
+        }
+        return true;
+    }
 }

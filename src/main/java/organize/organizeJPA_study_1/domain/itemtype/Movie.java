@@ -22,7 +22,7 @@ public class Movie extends Item {
         this.actor = actor;
     }
 
-    public void updateDirecotr(String director) {
+    public void updateDirector(String director) {
         this.director = director;
     }
 

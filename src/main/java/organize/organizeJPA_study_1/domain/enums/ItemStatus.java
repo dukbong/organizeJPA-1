@@ -10,4 +10,8 @@ public enum ItemStatus {
     OFF_SALE("판매중지");
 
     private String status;
+
+    public ItemStatus toggle() {
+        return this == ON_SALE ? OFF_SALE : ON_SALE;
+    }
 }
