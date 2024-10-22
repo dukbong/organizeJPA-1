@@ -13,8 +13,8 @@ public class BookResponse extends ItemResponse {
     private String isbn;
 
     @Builder
-    public BookResponse(String name, int price, int stockQuantity, ItemStatus itemStatus, List<String> categorys, String author, String isbn) {
-        super(name, price, stockQuantity, itemStatus, categorys);
+    public BookResponse(String name, int price, int stockQuantity, ItemStatus itemStatus, String mainCategory, List<String> categoryList, String author, String isbn) {
+        super(name, price, stockQuantity, itemStatus, mainCategory, categoryList);
         this.author = author;
         this.isbn = isbn;
     }

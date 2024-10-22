@@ -15,8 +15,8 @@ public class BookCreateDto extends ItemCreateDto{
     private String author;
     private String isbn;
 
-    public BookCreateDto(String name, int price, int stockQuantity, List<CategoryType> categoryTypes, String author, String isbn) {
-        super(name, price, stockQuantity, categoryTypes);
+    public BookCreateDto(String name, int price, int stockQuantity, CategoryType mainCategory, List<CategoryType> categoryTypes, String author, String isbn) {
+        super(name, price, stockQuantity, mainCategory, categoryTypes);
         this.author = author;
         this.isbn = isbn;
     }

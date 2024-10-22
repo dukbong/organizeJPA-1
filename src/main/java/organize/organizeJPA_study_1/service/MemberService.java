@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import organize.organizeJPA_study_1.domain.Member;
 import organize.organizeJPA_study_1.dto.MemberJoinDto;
+import organize.organizeJPA_study_1.dto.MemberResponse;
 import organize.organizeJPA_study_1.dto.MemberUpdateDto;
 import organize.organizeJPA_study_1.mapper.Mapper;
 import organize.organizeJPA_study_1.repository.MemberRepository;
@@ -15,7 +16,7 @@ import organize.organizeJPA_study_1.repository.MemberRepository;
 public class MemberService {
 
     private final MemberRepository memberRepository;
-    private final Mapper<MemberJoinDto, Member> memberJoinMapper;
+    private final Mapper<MemberJoinDto, Member, MemberResponse> memberJoinMapper;
 
     public Long saveMember(MemberJoinDto memberDto) {
         validateDuplicateMember(memberDto);

@@ -33,13 +33,15 @@ public class ItemCreateDto {
     private int price;
     @Min(value = 0, message = "재고 수량은 0개 부터 가능합니다.")
     private int stockQuantity;
-    @Column(nullable = false)
+    @NotNull(message = "메인 카테코리는 필수 입니다.")
+    private CategoryType mainCategoryType;
     private List<CategoryType> categoryTypes;
 
-    public ItemCreateDto(String name, int price, int stockQuantity, List<CategoryType> categoryTypes) {
+    public ItemCreateDto(String name, int price, int stockQuantity, CategoryType mainCategoryType, List<CategoryType> categoryTypes) {
         this.name = name;
         this.price = price;
         this.stockQuantity = stockQuantity;
+        this.mainCategoryType = mainCategoryType;
         this.categoryTypes = categoryTypes;
     }
 }

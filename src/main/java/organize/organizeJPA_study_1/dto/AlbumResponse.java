@@ -13,8 +13,8 @@ public class AlbumResponse extends ItemResponse{
     private String etc;
 
     @Builder
-    public AlbumResponse(String name, int price, int stockQuantity, ItemStatus itemStatus, List<String> categorys, String artist, String etc) {
-        super(name, price, stockQuantity, itemStatus, categorys);
+    public AlbumResponse(String name, int price, int stockQuantity, ItemStatus itemStatus, String mainCategory, List<String> categoryList, String artist, String etc) {
+        super(name, price, stockQuantity, itemStatus, mainCategory, categoryList);
         this.artist = artist;
         this.etc = etc;
     }

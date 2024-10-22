@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 import organize.organizeJPA_study_1.domain.base.BaseInfo;
+import organize.organizeJPA_study_1.domain.enums.CategoryType;
 import organize.organizeJPA_study_1.domain.enums.ItemStatus;
 import organize.organizeJPA_study_1.domain.enums.UseYn;
 import organize.organizeJPA_study_1.domain.itemtype.Album;
@@ -40,7 +41,7 @@ public class Item extends BaseInfo {
     @Enumerated(EnumType.STRING)
     private ItemStatus itemStatus;
 
-    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CategoryItem> categoryItems = new ArrayList<>();
 
     protected Item(String name, int price, int stockQuantity) {
@@ -49,48 +50,6 @@ public class Item extends BaseInfo {
         this.stockQuantity = stockQuantity;
         this.itemStatus = ItemStatus.ON_SALE;
         this.useYn = UseYn.Y;
-    }
-
-    public static List<ItemResponse> entityToResponseDto(List<Item> items) {
-        List<ItemResponse> responses = new ArrayList<>();
-        for (Item item : items) {
-            ItemResponse response = null;
-            if (item instanceof Book book) {
-                response = BookResponse.builder().name(book.getName())
-                        .price(book.getPrice())
-                        .stockQuantity(book.getStockQuantity())
-                        .categorys(book.getCategoryItems().stream().map(row -> row.getCategory().getCategoryType().getType()).toList())
-                        .itemStatus(book.getItemStatus())
-                        .author(book.getAuthor())
-                        .isbn(book.getIsbn())
-                        .build();
-            }
-            if (item instanceof Movie movie) {
-                response = MovieResponse.builder().name(movie.getName())
-                        .price(movie.getPrice())
-                        .stockQuantity(movie.getStockQuantity())
-                        .categorys(movie.getCategoryItems().stream().map(row -> row.getCategory().getCategoryType().getType()).toList())
-                        .itemStatus(movie.getItemStatus())
-                        .director(movie.getDirector())
-                        .actor(movie.getActor())
-                        .build();
-            }
-            if (item instanceof Album album) {
-                response = AlbumResponse.builder().name(album.getName())
-                        .price(album.getPrice())
-                        .stockQuantity(album.getStockQuantity())
-                        .categorys(album.getCategoryItems().stream().map(row -> row.getCategory().getCategoryType().getType()).toList())
-                        .itemStatus(album.getItemStatus())
-                        .artist(album.getArtist())
-                        .etc(album.getEtc())
-                        .build();
-            }
-
-            if (response != null) {
-                responses.add(response);
-            }
-        }
-        return responses;
     }
 
     public void removeStock(int quantity) {
@@ -156,10 +115,10 @@ public class Item extends BaseInfo {
 
     private void updateAlbumDetails(AlbumCreateDto dto) {
         Album album = (Album) this;
-        if (dto.getArtist() != null && !dto.getArtist().equals(album.getArtist())) {
+        if (dto.getArtist() != null && !dto.getArtist().equals(((Album) this).getArtist())) {
             album.updateArtist(dto.getArtist());
         }
-        if (dto.getEtc() != null && !dto.getEtc().equals(album.getEtc())) {
+        if (dto.getEtc() != null && !dto.getEtc().equals(((Album) this).getEtc())) {
             album.updateEtc(dto.getEtc());
         }
     }

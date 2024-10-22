@@ -11,4 +11,7 @@ import java.util.List;
 public interface CategoryRepository extends JpaRepository<Category, Integer> {
     @Query("select c from Category c where c.categoryType in :types")
     List<Category> findByCategoryTypeIn(@Param("types") List<CategoryType> types);
+
+    @Query("select c from Category c where c.parent.id = :parentId and c.categoryType in :types")
+    List<Category> findByMainTypeAndCategoryTypeIn(List<CategoryType> types, Long parentId);
 }

@@ -13,8 +13,8 @@ public class MovieResponse extends ItemResponse{
     private String actor;
 
     @Builder
-    public MovieResponse(String name, int price, int stockQuantity, ItemStatus itemStatus, List<String> categorys, String director, String actor) {
-        super(name, price, stockQuantity, itemStatus, categorys);
+    public MovieResponse(String name, int price, int stockQuantity, ItemStatus itemStatus, String mainCategory, List<String> categoryList, String director, String actor) {
+        super(name, price, stockQuantity, itemStatus, mainCategory, categoryList);
         this.director = director;
         this.actor = actor;
     }

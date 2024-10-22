@@ -20,7 +20,7 @@ public class Category extends BaseInfo {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private CategoryType categoryType;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -35,8 +35,17 @@ public class Category extends BaseInfo {
         this.categoryType = categoryType;
     }
 
+    public static void createHighCategory(CategoryType categoryType) {
+        if (categoryType.getLevel() != 1) {
+            throw new IllegalArgumentException("상위 카테고리만 지정 가능합니다.");
+        }
+    }
+
     // 하위 카테고리 추가 메서드
     public void addSubcategory(Category subcategory) {
+        if (subcategory.getCategoryType().getLevel() != 2) {
+            throw new IllegalArgumentException("상위 카테고리를 하위 카테고리로 지정할 수 없습니다.");
+        }
         subcategories.add(subcategory);
         subcategory.setParent(this);
     }
@@ -44,5 +53,11 @@ public class Category extends BaseInfo {
     // 부모 카테고리 설정 메서드
     private void setParent(Category parent) {
         this.parent = parent;
+    }
+
+    public void validateExistingSubcategory(Long parentId) {
+        if(this.id.equals(parentId)) {
+            throw new IllegalArgumentException("이미 등록된 하위 카테고리입니다.");
+        }
     }
 }
