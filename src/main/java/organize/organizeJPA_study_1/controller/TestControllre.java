@@ -4,10 +4,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import organize.organizeJPA_study_1.domain.Category;
-import organize.organizeJPA_study_1.dto.CategoryDto;
-import organize.organizeJPA_study_1.dto.ItemCreateDto;
-import organize.organizeJPA_study_1.dto.ItemResponse;
+import organize.organizeJPA_study_1.dto.request.CategoryRequest;
+import organize.organizeJPA_study_1.dto.request.ItemRequest;
+import organize.organizeJPA_study_1.dto.response.ItemResponse;
 import organize.organizeJPA_study_1.repository.CategoryRepository;
 import organize.organizeJPA_study_1.service.CategoryService;
 import organize.organizeJPA_study_1.service.ItemService;
@@ -24,17 +23,17 @@ public class TestControllre {
     private final CategoryService categoryService;
 
     @PostMapping
-    public void a(@Valid @RequestBody ItemCreateDto dto) {
+    public void a(@Valid @RequestBody ItemRequest dto) {
         itemService.saveItem(dto);
     }
 
     @PostMapping("/cp")
-    public void cp(@RequestBody CategoryDto dto) {
+    public void cp(@RequestBody CategoryRequest dto) {
         categoryService.saveHighCategory(dto);
     }
 
     @PostMapping("/u/{itemId}")
-    public void u(@PathVariable("itemId") Long itemId, @RequestBody ItemCreateDto dto) {
+    public void u(@PathVariable("itemId") Long itemId, @RequestBody ItemRequest dto) {
         itemService.updateItem(itemId, dto);
     }
 
@@ -47,4 +46,15 @@ public class TestControllre {
     public List<ItemResponse> g() {
         return itemService.findAllUseY();
     }
+
+    @GetMapping("/cdh/{highCategoryId}")
+    public void deleteHighCategory(@PathVariable("highCategoryId") Long highCategoryId) {
+        categoryService.deleteHighCategory(highCategoryId);
+    }
+
+    @GetMapping("/cds/{rowCategoryId}")
+    public void deleteRowCategory(@PathVariable("rowCategoryId") Long rowCategoryId) {
+        categoryService.deleteRowCategory(rowCategoryId);
+    }
+
 }

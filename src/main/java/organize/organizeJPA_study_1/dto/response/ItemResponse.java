@@ -1,4 +1,4 @@
-package organize.organizeJPA_study_1.dto;
+package organize.organizeJPA_study_1.dto.response;
 
 import lombok.Getter;
 import lombok.Setter;

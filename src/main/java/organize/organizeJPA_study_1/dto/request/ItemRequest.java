@@ -1,14 +1,16 @@
-package organize.organizeJPA_study_1.dto;
+package organize.organizeJPA_study_1.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import organize.organizeJPA_study_1.domain.enums.CategoryType;
+import organize.organizeJPA_study_1.dto.request.subtype.AlbumRequest;
+import organize.organizeJPA_study_1.dto.request.subtype.BookRequest;
+import organize.organizeJPA_study_1.dto.request.subtype.MovieRequest;
 
 import java.util.List;
 
@@ -20,11 +22,11 @@ import java.util.List;
         property = "type"
 )
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = BookCreateDto.class, name = "book"),
-        @JsonSubTypes.Type(value = AlbumCreateDto.class, name = "album"),
-        @JsonSubTypes.Type(value = MovieCreateDto.class, name = "movie")
+        @JsonSubTypes.Type(value = BookRequest.class, name = "book"),
+        @JsonSubTypes.Type(value = AlbumRequest.class, name = "album"),
+        @JsonSubTypes.Type(value = MovieRequest.class, name = "movie")
 })
-public class ItemCreateDto {
+public class ItemRequest {
 
     @NotEmpty(message = "상품명은 필수 입력 사항입니다.")
     private String name;
@@ -37,7 +39,7 @@ public class ItemCreateDto {
     private CategoryType mainCategoryType;
     private List<CategoryType> categoryTypes;
 
-    public ItemCreateDto(String name, int price, int stockQuantity, CategoryType mainCategoryType, List<CategoryType> categoryTypes) {
+    public ItemRequest(String name, int price, int stockQuantity, CategoryType mainCategoryType, List<CategoryType> categoryTypes) {
         this.name = name;
         this.price = price;
         this.stockQuantity = stockQuantity;

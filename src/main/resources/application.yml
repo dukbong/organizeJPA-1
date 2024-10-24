@@ -25,6 +25,7 @@ spring:
       ddl-auto: create
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
         # show_sql: true outputs to System.out > use only in dev environment
         # Should not be used in production environment
         # show_sql: true

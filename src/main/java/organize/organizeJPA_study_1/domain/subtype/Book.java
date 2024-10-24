@@ -1,4 +1,4 @@
-package organize.organizeJPA_study_1.domain.itemtype;
+package organize.organizeJPA_study_1.domain.subtype;
 
 import jakarta.persistence.Entity;
 import lombok.AccessLevel;

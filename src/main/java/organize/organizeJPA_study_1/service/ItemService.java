@@ -9,16 +9,13 @@ import organize.organizeJPA_study_1.domain.CategoryItem;
 import organize.organizeJPA_study_1.domain.Item;
 import organize.organizeJPA_study_1.domain.enums.CategoryType;
 import organize.organizeJPA_study_1.domain.enums.UseYn;
-import organize.organizeJPA_study_1.dto.ItemCreateDto;
-import organize.organizeJPA_study_1.dto.ItemResponse;
+import organize.organizeJPA_study_1.dto.request.ItemRequest;
+import organize.organizeJPA_study_1.dto.response.ItemResponse;
 import organize.organizeJPA_study_1.mapper.Mapper;
 import organize.organizeJPA_study_1.repository.CategoryRepository;
 import organize.organizeJPA_study_1.repository.ItemRepository;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -35,7 +32,7 @@ import java.util.Optional;
 
     private final ItemRepository itemRepository;
     private final CategoryRepository categoryRepository;
-    private final Mapper<ItemCreateDto, Item, ItemResponse> itemMapper;
+    private final Mapper<ItemRequest, Item, ItemResponse> itemMapper;
 
     /***
      * 판매 물품 저장
@@ -43,27 +40,21 @@ import java.util.Optional;
      * @return 저장된 아이템 ID
      */
     @Transactional
-    public Long saveItem(ItemCreateDto itemCreateDto) {
-        CategoryType mainType = itemCreateDto.getMainCategoryType();
-        List<CategoryType> types = itemCreateDto.getCategoryTypes();
-        List<Category> mainCategory = categoryRepository.findByCategoryTypeIn(List.of(mainType));
-        if(mainCategory.isEmpty()) {
-            throw new IllegalArgumentException("상위 카테고리를 찾을 수 없습니다.");
-        }
-        List<Category> categories = categoryRepository.findByMainTypeAndCategoryTypeIn(types, mainCategory.get(0).getId());
-        if(!(categories.size() == types.size())) {
-            throw new IllegalArgumentException("하위 카테고리 중 일부를 찾을 수 없습니다.");
-        }
+    public Long saveItem(ItemRequest itemCreateDto) {
+        List<CategoryType> subCategoryType = itemCreateDto.getCategoryTypes();
+        Category mainCategory = findByMainCategoryTypeToEquals(itemCreateDto.getMainCategoryType());
+        List<Category> subCategories = findByMainTypeAndCategoryTypeIn(subCategoryType, mainCategory.getId());
         Item item = itemMapper.toEntity(itemCreateDto);
-        if(!categories.isEmpty()) {
-            List<CategoryItem> categoryItems = categories.stream().map(CategoryItem::of).toList();
-            item.addCategoryItems(categoryItems);
+        if(!subCategories.isEmpty()) {
+            // 하위 카테고리와 상위 카테고리가 존재한다.
+            if(!(subCategories.size() == subCategoryType.size())) throw new IllegalArgumentException("하위 카테고리 중 일부를 찾을 수 없습니다.");
+            item.addTotalCategoryItems(CategoryItem.of(subCategories));
         } else {
-            List<CategoryItem> mainCategoryItems = mainCategory.stream().map(CategoryItem::of).toList();
-            item.addCategoryItems(mainCategoryItems);
+            // 상위 카테고리만 존재한다.
+            CategoryItem mainCategoryItems = CategoryItem.of(mainCategory);
+            item.addMainCategoryItems(mainCategoryItems);
         }
-        Item saveItem = itemRepository.save(item);
-        return saveItem.getId();
+        return itemRepository.save(item).getId();
     }
 
     /***
@@ -72,7 +63,7 @@ import java.util.Optional;
      */
     @Transactional
     public void toggleSaleStatus(Long itemId) {
-        findByItemId(itemId).changeSale();
+        findByIdUseY(itemId).toggleSaleStatus();
     }
 
     /***
@@ -81,7 +72,7 @@ import java.util.Optional;
      */
     @Transactional
     public void deleteItem(Long itemId) {
-        findByItemId(itemId).notUse();
+        findByIdUseY(itemId).notUse();
     }
 
     /***
@@ -91,68 +82,78 @@ import java.util.Optional;
      * @param itemCreateDto 수정할 아이템 데이터
      */
     @Transactional
-    public void updateItem(Long itemId, ItemCreateDto itemCreateDto) {
-        Item item = findByItemId(itemId);
+    public void updateItem(Long itemId, ItemRequest itemCreateDto) {
+        Item item = findByIdUseY(itemId);
         if (!item.isValidUpdate(itemCreateDto.getClass())) {
-            item.notUse();
             saveItem(itemCreateDto);
         } else {
-            boolean sizeCheck = item.getCategoryItems().size() == itemCreateDto.getCategoryTypes().size();
-            boolean equalsCheck = sizeCheck && equalsCheck(item, itemCreateDto);
-            if(!sizeCheck || !equalsCheck) {
-                item.getCategoryItems().clear();
+            if(!item.areCategoryItemsAndTypesEqual(itemCreateDto)) {
                 List<CategoryType> types = itemCreateDto.getCategoryTypes();
                 CategoryType mainType = itemCreateDto.getMainCategoryType();
-                List<Category> mainCategory = categoryRepository.findByCategoryTypeIn(List.of(mainType));
-                if(mainCategory.isEmpty()) {
-                    throw new IllegalArgumentException("상위 카테고리를 찾을 수 없습니다.");
-                }
-                List<CategoryItem> lc = new ArrayList<>();
-                for (CategoryType categoryType : types) {
-                    List<Category> categories = categoryRepository.findByMainTypeAndCategoryTypeIn(List.of(categoryType),mainCategory.get(0).getId());
-                    lc.add(CategoryItem.of(categories.get(0)));
-                }
-                item.addCategoryItems(lc);
+                Category mainCategory = findByMainCategoryTypeToEquals(mainType);
+                List<Category> totalCategory = findByMainTypeAndCategoryTypeIn(types,mainCategory.getId());
+                item.addTotalCategoryItems(CategoryItem.of(totalCategory));
             }
             item.updateItem(itemCreateDto);
         }
     }
 
-    private boolean equalsCheck(Item item, ItemCreateDto itemCreateDto) {
-        List<CategoryItem> categoryItems = item.getCategoryItems();
-        List<CategoryType> categoryTypesFromItem = categoryItems.stream()
-                .map(categoryItem -> categoryItem.getCategory().getCategoryType()) // CategoryType 추출
-                .toList();
-
-        List<CategoryType> categoryTypesFromDto = itemCreateDto.getCategoryTypes();
-
-        return new HashSet<>(categoryTypesFromItem).containsAll(categoryTypesFromDto);
-    }
-
     /***
-     * 사용 중인 모든 아이템 조회
+     * 사용 중이며, 판매 상태는 상관없이 전체 조회
      * @return 사용 중인 아이템 목록
      */
     public List<ItemResponse> findAllUseY() {
         return itemMapper.toResponseListDto(itemRepository.findAllUseY(UseYn.Y));
-//        return Item.entityToResponseDto(itemRepository.findAllUseY(UseYn.Y));
     }
 
     /***
-     * 특정 아이템 조회
+     * 사용 여부와 상관없이 특정 아이템 조회
      * @param itemId 조회할 아이템 ID
      * @return 조회된 아이템
      */
     public Item findItemById(Long itemId) {
-        return itemRepository.findById(itemId).orElse(null);
+        return itemRepository.findById(itemId).orElseThrow(
+                () -> new IllegalArgumentException("해당 상품이 존재하지 않습니다.")
+        );
     }
 
-    private Item findByItemId(Long itemId) {
-        Optional<Item> findItem =  itemRepository.findByIdAndUseY(itemId, UseYn.Y);
-        if(findItem.isEmpty()) {
-            throw new IllegalArgumentException("해당 상품이 존재하지 않습니다.");
-        }
-        return findItem.get();
+    /***
+     * 사용 여부 = Y이며, 판매중인 전체 아이템 조회
+     * @return 조회된 아이템
+     */
+    public List<ItemResponse> finaAllUseYAndOnSale() {
+        return itemMapper.toResponseListDto(itemRepository.finaAllUseYAndOnSale());
     }
 
+    /***
+     * 타입으로 특정 카테고리 조회
+     * @param type 조회할 카테고리 이름
+     * @return 조회된 카테고리
+     */
+    protected Category findByMainCategoryTypeToEquals(CategoryType type) {
+        return categoryRepository.findByMainCategoryTypeToEquals(type).orElseThrow(
+                () -> new IllegalArgumentException("상위 카테고리를 찾을 수 없습니다.")
+        );
+    }
+
+    /***
+     * 타입 리스트와 일치하면서 메인 카테고리로 조회
+     * @param types 조회할 타입 리스트
+     * @param categoryId 조회할 카테고리 아이디
+     * @return 조회된 카테고리 리스트
+     */
+    protected List<Category> findByMainTypeAndCategoryTypeIn(List<CategoryType> types, Long categoryId) {
+        return categoryRepository.findByMainTypeAndCategoryTypeIn(types, categoryId);
+    }
+
+    /***
+     * 사용 가능한 특정 아이템 조회
+     * @param itemId 조회할 아이템 Id
+     * @return 조회된 아이템
+     */
+    protected Item findByIdUseY(Long itemId) {
+        return itemRepository.findByIdAndUseY(itemId, UseYn.Y).orElseThrow(
+                () -> new IllegalArgumentException("해당 상품이 존재하지 않습니다.")
+        );
+    }
 }

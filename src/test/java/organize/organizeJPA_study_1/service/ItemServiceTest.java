@@ -9,11 +9,12 @@ import organize.organizeJPA_study_1.domain.Category;
 import organize.organizeJPA_study_1.domain.Item;
 import organize.organizeJPA_study_1.domain.enums.CategoryType;
 import organize.organizeJPA_study_1.domain.enums.ItemStatus;
-import organize.organizeJPA_study_1.domain.itemtype.Album;
-import organize.organizeJPA_study_1.domain.itemtype.Book;
-import organize.organizeJPA_study_1.dto.AlbumCreateDto;
-import organize.organizeJPA_study_1.dto.BookCreateDto;
-import organize.organizeJPA_study_1.dto.ItemCreateDto;
+import organize.organizeJPA_study_1.domain.subtype.Album;
+import organize.organizeJPA_study_1.domain.subtype.Book;
+import organize.organizeJPA_study_1.dto.request.subtype.AlbumRequest;
+import organize.organizeJPA_study_1.dto.request.subtype.BookRequest;
+import organize.organizeJPA_study_1.dto.request.ItemRequest;
+import organize.organizeJPA_study_1.dto.response.ItemResponse;
 import organize.organizeJPA_study_1.mapper.Mapper;
 import organize.organizeJPA_study_1.repository.CategoryItemRepository;
 import organize.organizeJPA_study_1.repository.CategoryRepository;
@@ -23,7 +24,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
@@ -38,7 +38,7 @@ class ItemServiceTest {
     @Autowired
     CategoryItemRepository categoryItemRepository;
     @Autowired
-    Mapper<ItemCreateDto, Item> itemMapper;
+    Mapper<ItemRequest, Item, ItemResponse> itemMapper;
 
     @Test
     @DisplayName("아이템 저장 성공")
@@ -51,10 +51,11 @@ class ItemServiceTest {
         categoryRepository.save(category2);
         categoryRepository.save(category3);
 
-        BookCreateDto bookDto = new BookCreateDto(
+        BookRequest bookDto = new BookRequest(
                 "JPA 책",
                 15000,
                 5,
+                CategoryType.BOOK,
                 Arrays.asList(CategoryType.BOOK, CategoryType.MOVIE),
                 "김영한",
                 "123-123"
@@ -91,10 +92,11 @@ class ItemServiceTest {
         categoryRepository.save(category2);
         categoryRepository.save(category3);
 
-        BookCreateDto bookDto = new BookCreateDto(
+        BookRequest bookDto = new BookRequest(
                 "JPA 책",
                 15000,
                 5,
+                CategoryType.BOOK,
                 Arrays.asList(CategoryType.BOOK, CategoryType.MOVIE),
                 "김영한",
                 "123-123"
@@ -103,7 +105,7 @@ class ItemServiceTest {
         Long itemId = itemService.saveItem(bookDto);
 
         // when
-        itemService.offSaleItem(itemId);
+        itemService.toggleSaleStatus(itemId);
 
         // then
         Book item = (Book) itemRepository.findById(itemId).orElseThrow(() -> new RuntimeException("searchException"));
@@ -135,19 +137,21 @@ class ItemServiceTest {
         categoryRepository.save(category2);
         categoryRepository.save(category3);
 
-        BookCreateDto bookDto = new BookCreateDto(
+        BookRequest bookDto = new BookRequest(
                 "JPA 책",
                 15000,
                 5,
+                CategoryType.BOOK,
                 Arrays.asList(CategoryType.BOOK, CategoryType.MOVIE),
                 "김영한",
                 "123-123"
         );
         Long itemId = itemService.saveItem(bookDto);
-        AlbumCreateDto albumDto = new AlbumCreateDto(
+        AlbumRequest albumDto = new AlbumRequest(
                 "분홍신",
                 15000,
                 5,
+                CategoryType.ALBUM,
                 Arrays.asList(CategoryType.ALBUM, CategoryType.MOVIE),
                 "아이유",
                 "아이유 노래"

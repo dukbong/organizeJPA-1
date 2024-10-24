@@ -3,23 +3,28 @@ package organize.organizeJPA_study_1.mapper;
 import org.springframework.stereotype.Component;
 import organize.organizeJPA_study_1.domain.Category;
 import organize.organizeJPA_study_1.domain.Item;
-import organize.organizeJPA_study_1.domain.Member;
-import organize.organizeJPA_study_1.domain.embed.Address;
-import organize.organizeJPA_study_1.domain.itemtype.Album;
-import organize.organizeJPA_study_1.domain.itemtype.Book;
-import organize.organizeJPA_study_1.domain.itemtype.Movie;
-import organize.organizeJPA_study_1.dto.*;
+import organize.organizeJPA_study_1.domain.subtype.Album;
+import organize.organizeJPA_study_1.domain.subtype.Book;
+import organize.organizeJPA_study_1.domain.subtype.Movie;
+import organize.organizeJPA_study_1.dto.request.subtype.AlbumRequest;
+import organize.organizeJPA_study_1.dto.request.subtype.BookRequest;
+import organize.organizeJPA_study_1.dto.request.ItemRequest;
+import organize.organizeJPA_study_1.dto.request.subtype.MovieRequest;
+import organize.organizeJPA_study_1.dto.response.subtype.AlbumResponse;
+import organize.organizeJPA_study_1.dto.response.subtype.BookResponse;
+import organize.organizeJPA_study_1.dto.response.ItemResponse;
+import organize.organizeJPA_study_1.dto.response.subtype.MovieResponse;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class ItemCreateMapper implements Mapper<ItemCreateDto, Item, ItemResponse> {
+public class ItemMapper implements Mapper<ItemRequest, Item, ItemResponse> {
 
 
     @Override
-    public Item toEntity(ItemCreateDto dto) {
-        if(dto instanceof BookCreateDto bookCreateDto) {
+    public Item toEntity(ItemRequest dto) {
+        if(dto instanceof BookRequest bookCreateDto) {
             return Book.builder()
                     .name(bookCreateDto.getName())
                     .price(bookCreateDto.getPrice())
@@ -28,7 +33,7 @@ public class ItemCreateMapper implements Mapper<ItemCreateDto, Item, ItemRespons
                     .isbn(bookCreateDto.getIsbn())
                     .build();
         }
-        if(dto instanceof AlbumCreateDto albumCreateDto) {
+        if(dto instanceof AlbumRequest albumCreateDto) {
             return Album.builder()
                     .name(albumCreateDto.getName())
                     .price(albumCreateDto.getPrice())
@@ -37,7 +42,7 @@ public class ItemCreateMapper implements Mapper<ItemCreateDto, Item, ItemRespons
                     .etc(albumCreateDto.getEtc())
                     .build();
         }
-        if(dto instanceof MovieCreateDto movieCreateDto) {
+        if(dto instanceof MovieRequest movieCreateDto) {
             return Movie.builder()
                     .name(movieCreateDto.getName())
                     .price(movieCreateDto.getPrice())
@@ -46,12 +51,11 @@ public class ItemCreateMapper implements Mapper<ItemCreateDto, Item, ItemRespons
                     .actor(movieCreateDto.getActor())
                     .build();
         }
-
-        throw new IllegalArgumentException("ItemCreateDto Type :" + dto.getClass().getSimpleName());
+        throw new IllegalArgumentException("지원하지 않는 아이템 형태입니다.");
     }
 
     @Override
-    public ItemCreateDto toDto(Item entity) {
+    public ItemRequest toDto(Item entity) {
         return null;
     }
 

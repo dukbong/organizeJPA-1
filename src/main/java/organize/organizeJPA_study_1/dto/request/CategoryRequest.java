@@ -1,5 +1,6 @@
-package organize.organizeJPA_study_1.dto;
+package organize.organizeJPA_study_1.dto.request;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,12 +11,12 @@ import java.util.List;
 
 @Getter @Setter
 @NoArgsConstructor
-public class CategoryDto {
+public class CategoryRequest {
 
+    @NotNull(message = "메인 카테고리는 필수 사항입니다.")
     private CategoryType categoryType;
     private List<CategoryType> subCategoryType;
 
-    //== 바인딩 시 제약 조건 ==//
     public void setSubCategoryType(List<CategoryType> subCategoryType) {
         List<CategoryType> subCategoryTypeList = new ArrayList<>();
         for(CategoryType categoryType : subCategoryType) {

@@ -9,13 +9,18 @@ import organize.organizeJPA_study_1.domain.base.BaseInfo;
 import organize.organizeJPA_study_1.domain.enums.CategoryType;
 import organize.organizeJPA_study_1.domain.enums.ItemStatus;
 import organize.organizeJPA_study_1.domain.enums.UseYn;
-import organize.organizeJPA_study_1.domain.itemtype.Album;
-import organize.organizeJPA_study_1.domain.itemtype.Book;
-import organize.organizeJPA_study_1.domain.itemtype.Movie;
-import organize.organizeJPA_study_1.dto.*;
+import organize.organizeJPA_study_1.domain.subtype.Album;
+import organize.organizeJPA_study_1.domain.subtype.Book;
+import organize.organizeJPA_study_1.domain.subtype.Movie;
+import organize.organizeJPA_study_1.dto.request.ItemRequest;
+import organize.organizeJPA_study_1.dto.request.UpdateItemRequest;
+import organize.organizeJPA_study_1.dto.request.subtype.AlbumRequest;
+import organize.organizeJPA_study_1.dto.request.subtype.BookRequest;
+import organize.organizeJPA_study_1.dto.request.subtype.MovieRequest;
 import organize.organizeJPA_study_1.exception.NotEnoughStockException;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 @Entity
@@ -44,7 +49,7 @@ public class Item extends BaseInfo {
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CategoryItem> categoryItems = new ArrayList<>();
 
-    protected Item(String name, int price, int stockQuantity) {
+    public Item(String name, int price, int stockQuantity) {
         this.name = name;
         this.price = price;
         this.stockQuantity = stockQuantity;
@@ -64,7 +69,7 @@ public class Item extends BaseInfo {
         this.stockQuantity += quantity;
     }
 
-    public void changeSale() {
+    public void toggleSaleStatus() {
         this.itemStatus = this.itemStatus.toggle();
     }
 
@@ -73,13 +78,17 @@ public class Item extends BaseInfo {
         ci.addItem(this);
     }
 
-    public void addCategoryItems(List<CategoryItem> ci) {
+    public void addTotalCategoryItems(List<CategoryItem> ci) {
         for (CategoryItem categoryItem : ci) {
             addCategoryItem(categoryItem);
         }
     }
 
-    public void updateItem(ItemCreateDto itemCreateDto) {
+    public void addMainCategoryItems(CategoryItem ci) {
+        addCategoryItem(ci);
+    }
+
+    public void updateItem(ItemRequest itemCreateDto) {
         if (itemCreateDto.getName() != null && !itemCreateDto.getName().equals(this.name)) {
             this.name = itemCreateDto.getName();
         }
@@ -93,43 +102,9 @@ public class Item extends BaseInfo {
         updateItemDetails(itemCreateDto);
     }
 
-    private void updateItemDetails(ItemCreateDto itemCreateDto) {
-        if (itemCreateDto instanceof BookCreateDto dto) {
-            updateBookDetails(dto);
-        } else if (itemCreateDto instanceof AlbumCreateDto dto) {
-            updateAlbumDetails(dto);
-        } else if (itemCreateDto instanceof MovieCreateDto dto) {
-            updateMovieDetails(dto);
-        }
-    }
-
-    private void updateBookDetails(BookCreateDto dto) {
-        Book book = (Book) this;
-        if (dto.getAuthor() != null && !dto.getAuthor().equals(book.getAuthor())) {
-            book.updateAuthor(dto.getAuthor());
-        }
-        if (dto.getIsbn() != null && !dto.getIsbn().equals(book.getIsbn())) {
-            book.updateIsbn(dto.getIsbn());
-        }
-    }
-
-    private void updateAlbumDetails(AlbumCreateDto dto) {
-        Album album = (Album) this;
-        if (dto.getArtist() != null && !dto.getArtist().equals(((Album) this).getArtist())) {
-            album.updateArtist(dto.getArtist());
-        }
-        if (dto.getEtc() != null && !dto.getEtc().equals(((Album) this).getEtc())) {
-            album.updateEtc(dto.getEtc());
-        }
-    }
-
-    private void updateMovieDetails(MovieCreateDto dto) {
-        Movie movie = (Movie) this;
-        if (dto.getDirector() != null && !dto.getDirector().equals(movie.getDirector())) {
-            movie.updateDirector(dto.getDirector());
-        }
-        if (dto.getActor() != null && !dto.getActor().equals(movie.getActor())) {
-            movie.updateActor(dto.getActor());
+    private void updateItemDetails(ItemRequest itemRequest) {
+        if(itemRequest instanceof UpdateItemRequest updateItemRequest) {
+            updateItemRequest.updateDetails(this);
         }
     }
 
@@ -137,16 +112,36 @@ public class Item extends BaseInfo {
         this.useYn = UseYn.N;
     }
 
-    public boolean isValidUpdate(Class<? extends ItemCreateDto> dtoClass) {
-        if (this instanceof Book && dtoClass != BookCreateDto.class) {
-            return false;
-        }
-        if (this instanceof Movie && dtoClass != MovieCreateDto.class) {
-            return false;
-        }
-        if (this instanceof Album && dtoClass != AlbumCreateDto.class) {
+    public boolean isValidUpdate(Class<? extends ItemRequest> dtoClass) {
+        if ((this instanceof Book && dtoClass != BookRequest.class) || (this instanceof Movie && dtoClass != MovieRequest.class) || (this instanceof Album && dtoClass != AlbumRequest.class)) {
+            this.notUse();
+            this.categoryItems.clear();
             return false;
         }
         return true;
     }
+
+    public boolean areCategoryItemsAndTypesEqual(ItemRequest itemRequest) {
+        boolean sizeCheck = this.categoryItems.size() == itemRequest.getCategoryTypes().size();
+        boolean equalsCheck = sizeCheck && equalsCheck(itemRequest);
+
+        if (!sizeCheck || !equalsCheck) {
+            this.categoryItems.clear();
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean equalsCheck(ItemRequest itemCreateDto) {
+        List<CategoryItem> categoryItems = this.categoryItems;
+        List<CategoryType> categoryTypesFromItem = categoryItems.stream()
+                .map(categoryItem -> categoryItem.getCategory().getCategoryType()) // CategoryType 추출
+                .toList();
+
+        List<CategoryType> categoryTypesFromDto = itemCreateDto.getCategoryTypes();
+
+        return new HashSet<>(categoryTypesFromItem).containsAll(categoryTypesFromDto);
+    }
+
 }
